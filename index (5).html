@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#091320">
+  <meta name="description" content="スマートフォンの前面カメラで目の閉じ具合を解析する、居眠り注意喚起の検証用アプリです。">
+  <title>居眠り見守り｜DRIVE GUARD 試作版</title>
+  <style>
+:root{color-scheme:dark;--bg:#091320;--card:#111f31;--card2:#17283e;--line:#2b425b;--txt:#f4f7fb;--sub:#a7bad0;--green:#3bdda5;--yellow:#ffc768;--red:#ff6c75;--blue:#70b7ff}
+*{box-sizing:border-box}html{height:100%;background:var(--bg)}body{margin:0;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;background:radial-gradient(circle at 50% -20%,#203b58 0%,var(--bg) 65%);color:var(--txt);line-height:1.5;min-height:100%;-webkit-tap-highlight-color:transparent}
+main{max-width:680px;margin:auto;padding:18px 15px 38px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:3px 0 20px}.identity{display:flex;align-items:center;gap:11px}.logo{width:46px;height:46px;background:#244767;border:1px solid #3774a3;display:grid;place-items:center;border-radius:15px;font-size:24px}.brand{font-weight:900;letter-spacing:.03em;font-size:21px;line-height:1.2}.brand small{display:block;color:var(--sub);font-size:10px;letter-spacing:.18em;padding-top:4px}.pill{border:1px solid #52647d;color:#cad7e6;border-radius:100px;padding:5px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+h1{font-size:24px;line-height:1.4;margin:0 0 6px}.lead{font-size:13px;color:var(--sub);margin:0 0 16px}.caution{border:1px solid #6c552b;background:#302a1f;border-radius:13px;padding:11px 13px;color:#ffdc9a;font-size:12.5px;margin-bottom:17px}.camera-frame{position:relative;border:1px solid #37526b;border-radius:18px;overflow:hidden;aspect-ratio:4/3;background:linear-gradient(135deg,#111f31 0%,#040c16 100%);box-shadow:0 12px 40px #0004}.camera-frame video,.camera-frame canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.camera-frame canvas{pointer-events:none}.placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#7e95ae;text-align:center;padding:22px}.placeholder .pic{font-size:46px;opacity:.7}.placeholder strong{font-size:18px;color:#d1dfea}.placeholder span{font-size:12px;max-width:260px}.camera-label{position:absolute;top:12px;left:12px;border-radius:100px;padding:6px 12px;font-size:12px;font-weight:800;background:#132235d9;border:1px solid #62788b;display:flex;align-items:center;gap:7px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#7e91a6}.camera-label.active .dot{background:var(--green);box-shadow:0 0 10px var(--green)}.camera-frame .right-tag{position:absolute;right:11px;bottom:10px;font-size:10px;background:#071525b8;border:1px solid #415670;padding:5px 8px;border-radius:7px}
+.status-card{margin:15px 0 12px;border:1px solid #38546d;background:var(--card);padding:16px;border-radius:16px;transition:.2s}.status-card.normal{border-color:#2c7e68;background:#103027}.status-card.warning{border-color:#a87b32;background:#312817}.status-card.danger{border:2px solid #f86677;background:#3d1e26;animation:pulse 1.7s infinite}.status-card.lost{border-color:#af7e3c;background:#312817}.status-card.uncertain{border-color:#526780;background:#1b2b3b}.status-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;color:#a9bacc}.status-chip{background:#263951;border-radius:30px;padding:5px 11px;font-size:11px;font-weight:800}.status-card.normal .status-chip{background:#165d4c;color:#99ffe0}.status-card.danger .status-chip{background:#a42d40;color:white}.status-card.warning .status-chip,.status-card.lost .status-chip{background:#805524;color:#ffdeab}.state-title{font-size:24px;margin:7px 0 3px;font-weight:900}.state-description{font-size:13px;color:#c9d7e5;margin:0;min-height:21px}.status-card.danger .state-description{color:#ffe6e8}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:15px}.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 10px}.stat span{display:block;color:var(--sub);font-size:11px}.stat strong{font-size:22px;font-variant-numeric:tabular-nums}.stat small{font-size:10px;color:var(--sub);margin-left:2px}.buttons{display:grid;grid-template-columns:1.7fr 1fr;gap:9px;margin-bottom:10px}button{appearance:none;border:0;border-radius:12px;min-height:51px;padding:10px 12px;color:var(--txt);font-weight:800;font-size:15px;cursor:pointer;touch-action:manipulation}button:disabled{opacity:.48;cursor:not-allowed}.primary{background:#40cda4;color:#061e1a}.stop{background:#cf4755;color:white}.secondary{background:#29425f;border:1px solid #456689}.tertiary{background:#1a3048;border:1px solid #324f6e;font-size:13px}.utility-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}.details{background:var(--card);border-radius:14px;border:1px solid var(--line);padding:14px 15px;margin-top:12px}.details h2{font-size:15px;margin:0 0 10px}.kv{display:flex;justify-content:space-between;gap:15px;color:var(--sub);font-size:12px;padding:5px 0;border-bottom:1px solid #24364b}.kv:last-child{border:0}.kv strong{color:var(--txt);font-variant-numeric:tabular-nums}.small{font-size:11.5px;color:var(--sub);line-height:1.65}.log{list-style:none;padding:0;margin:4px 0 0;max-height:210px;overflow:auto}.log li{border-top:1px solid #29415b;padding:8px 1px;display:flex;gap:10px;font-size:12px}.log time{color:var(--sub);white-space:nowrap}.log .severity-warning{color:var(--yellow)}.log .severity-danger{color:var(--red)}.log .severity-lost{color:#d9b37a}.footer-note{font-size:11px;color:#7f95a9;margin-top:20px}.error{color:#ffc8c9;font-size:12px;margin:7px 0}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.muted{color:var(--sub)}a{color:#9bcbff}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #ff506522}50%{box-shadow:0 0 0 5px #ff506500}}@media(min-width:560px){main{padding-top:25px}.camera-frame{aspect-ratio:16/10}.lead{font-size:14px}}
+.placeholder[hidden]{display:none}
+
+</style>
+</head>
+<body>
+<main>
+  <header class="topline">
+    <div class="identity"><div class="logo" aria-hidden="true">🛡️</div><div class="brand">居眠り見守り <small>DRIVE GUARD · PROTOTYPE</small></div></div>
+    <span class="pill">左右超高感度・音声警報版 v0.8</span>
+  </header>
+  <h1>居眠り・よそ見・下向き注意</h1>
+  <p class="lead">スマホの前面カメラで閉眼・横向き・下向き傾向を検出し、警報音と音声で注意喚起します。</p>
+  <div class="caution" role="note"><strong>⚠ 安全上の重要事項：</strong> 研究・試験用です。居眠り・よそ見・スマートフォン使用を確実に判定できる装置ではありません。設定や確認は必ず停車中に行い、眠いときは運転を中断してください。監視が正常でも安全を保証しません。</div>
+  <section class="camera-frame" aria-label="カメラ映像プレビュー">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay" aria-hidden="true"></canvas>
+    <div class="placeholder" id="placeholder"><span class="pic">📷</span><strong>カメラは停止しています</strong><span>停車中にスマホを固定し、「監視を開始」を押してください。</span></div>
+    <div class="camera-label" id="cameraLabel"><span class="dot"></span><span id="cameraText">カメラ停止</span></div>
+    <div class="right-tag">前面カメラ / 映像は保存しません</div>
+  </section>
+  <section class="status-card idle" id="statusCard" aria-live="polite">
+    <div class="status-top"><div class="eyebrow">運転状態の参考判定</div><span class="status-chip" id="stateChip">待機</span></div>
+    <div class="state-title" id="stateTitle">待機しています</div>
+    <p class="state-description" id="stateDescription">まず停車中に警報音をテストしてください。</p>
+  </section>
+  <div class="stats">
+    <div class="stat"><span>監視時間</span><strong id="elapsed">00:00</strong></div>
+    <div class="stat"><span>注意警報</span><strong id="warnCount">0</strong><small>回</small></div>
+    <div class="stat"><span>危険警報</span><strong id="dangerCount">0</strong><small>回</small></div>
+  </div>
+  <section class="details" aria-label="注意散漫判定">
+    <h2>👀 よそ見・下向きの判定（追加機能）</h2>
+    <div class="kv"><span>左右の顔向きスコア</span><strong id="yawValue">—</strong></div>
+    <div class="kv"><span>横向き継続時間</span><strong id="awayDuration">—</strong></div>
+    <div class="kv"><span>顔向き判定</span><strong id="turnDirection">未検知</strong></div>
+    <label for="yawSensitivity" class="small" style="display:block;margin:11px 0 6px;font-weight:700">左右の検知感度（停車中に選択）</label>
+    <select id="yawSensitivity" style="width:100%;padding:12px 10px;border:1px solid #456689;border-radius:9px;background:#203a55;color:#fff;font-size:15px;">
+      <option value="normal">標準：約1.6秒（誤警報を抑える）</option>
+      <option value="high">強め：約0.9秒</option>
+      <option value="max" selected>超高感度：約0.65秒（初期設定）</option>
+      <option value="extreme">最敏感：約0.45秒（停車中の検証専用）</option>
+    </select>
+    <div class="kv"><span>下向きの傾向</span><strong id="downValue">—</strong></div>
+    <div class="kv"><span>よそ見警報</span><strong id="awayCount">0 回</strong></div>
+    <div class="kv"><span>下向き警報</span><strong id="downCount">0 回</strong></div>
+    <div class="kv"><span>正面補正</span><strong id="attentionCalib">未開始</strong></div>
+    <div class="small" style="margin-top:9px">左右の顔向きは感度設定に応じて約0.45〜1.6秒で警報します（検証用の暫定値）。超高感度ではミラー確認・通常の安全確認でも警報が鳴りやすくなります。<strong>下向き＝スマホ使用とは断定しません。</strong>スマホそのものを認識する機能はありません。</div>
+  </section>
+  <div class="caution" style="margin-top:14px">🔊 <strong>必ず停車中に警報音テストをしてください。</strong> 端末音量やSafariの制限で無音になる場合があります。よそ見の警報は必要な左右安全確認の代わりにはなりません。</div>
+  <div class="buttons">
+    <button type="button" class="primary" id="startBtn">▶ 監視を開始</button>
+    <button type="button" class="stop" id="stopBtn" disabled>■ 監視を停止</button>
+  </div>
+  <div class="utility-buttons">
+    <button type="button" class="secondary" id="testBtn">🔊 警報音テスト</button>
+    <button type="button" class="tertiary" id="csvBtn" disabled>↓ 記録をCSV保存</button>
+  </div>
+  <button type="button" class="tertiary" id="turnTestBtn" style="width:100%;margin-bottom:8px;">🔔 左右よそ見警報の音を試す（停車中）</button>
+  <div class="details" style="margin-top:0;margin-bottom:10px"><h2>🔊 警報音の状態</h2><div class="kv"><span>音声システム</span><strong id="audioState">未テスト</strong></div><div class="small">開始前に必ず「左右よそ見警報の音を試す」を押して、実際に聞こえるか確認してください。iPhoneの音量・消音設定やブラウザーの制限によって鳴らない場合があります。聞こえなければ監視用途に使わないでください。</div></div>
+  <button type="button" class="tertiary" id="filesBtn" style="width:100%;margin-bottom:8px;">🔍 AIファイルの配信診断（先に押す）</button>
+  <div class="error" id="error" role="alert"></div>
+  <p class="small">v0.8：左右向き検出の感度・警報速度を上げ、連続したよそ見にも再警報します。顔の左右・音量は端末の設置位置に左右されます。iPhoneはSafariで直接開いてください。</p>
+  <section class="details" aria-live="polite"><h2>起動診断・配信診断</h2><div class="kv"><span>処理段階</span><strong id="diagStage">未開始</strong></div><p class="small" id="diagDetail">開始を押すとカメラ・AI読み込みの状態が表示されます。</p></section>
+  <div id="hint" class="small">※ 音量を上げてください。スマホが消音モードの場合は音声案内が鳴らないことがあります。</div>
+  <section class="details">
+    <h2>AI解析ステータス</h2>
+    <div class="kv"><span>目の開き具合（EAR）</span><strong id="eyeValue">—</strong></div>
+    <div class="kv"><span>閉眼しきい値（自動補正）</span><strong id="thresholdValue">—</strong></div>
+    <div class="kv"><span>解析頻度</span><strong id="fpsValue">—</strong></div>
+    <div class="kv"><span>AIの状態</span><strong id="setupValue">停止中</strong></div>
+    <div class="kv"><span>画面スリープ抑制</span><strong id="wakeValue">停止中</strong></div>
+    <div class="kv"><span>カメラ映像</span><strong id="privacyValue">端末内解析・保存なし</strong></div>
+    <p class="small">開始後に目の開閉を約2秒間自動補正します。顔の明るさ、眼鏡、マスク、カメラの角度や揺れによって誤警報・見逃しが起こります。眠気を検知しない場合でも、運転可能という意味ではありません。</p>
+  </section>
+  <section class="details">
+    <h2>今回の警報記録</h2>
+    <ol id="logList" class="log" aria-label="警報記録"></ol>
+    <p class="small">記録はこのページを閉じると消えます。顔の画像や動画を保存しません。必要な場合のみ警報履歴のCSVを保存できます。</p>
+  </section>
+  <section class="details">
+    <h2>安全に使うために</h2>
+    <div class="small">
+      <p>① 停車中に前面カメラが顔全体を写すよう、視界と操作の邪魔にならない位置に固定してください。正面を向いたまま、約3秒間初期補正します。</p>
+      <p>② 「左右よそ見警報の音を試す」で実際に警報音が鳴ることを確認してから開始してください。GitHub PagesからAIファイルを読み込みます。</p>
+      <p>③ 画面は表示したままにしてください。画面ロック、別アプリへの移動、着信時は解析が停止する場合があります。</p>
+      <p>④ 警報が鳴ったら画面を操作せず、安全な場所に停車して休憩・交代してください。警報が鳴らなくても眠気を感じたら運転を中断してください。</p>
+      <p>⑤ ミラー・左右安全確認・計器確認でも警報する可能性があります。車種・カメラ角度で精度が変わり、スマホを手に持っているかどうかは判定できません。</p><p>⑥ 炎天下の長時間使用による端末過熱やバッテリー消費にも注意してください。</p>
+    </div>
+  </section>
+  <p class="footer-note">© 試作：DRIVE GUARD / 現場安全管理の検討用。公的な安全認証や居眠り防止効果を保証するものではありません。AIライブラリ・モデルはGitHub Pagesに同梱配信します。初回起動には通信が必要です。スマートフォン操作そのものの検知ではなく、下向きの兆候検知です。</p>
+</main>
+<script>
+/* Drive Guard alpha — pure time-series detection logic. No network/storage. */
+const DEFAULTS = Object.freeze({
+  warnMs: 1200,
+  dangerMs: 2300,
+  lostMs: 3500,
+  repeatedWindowMs: 90000,
+  repeatedWarnings: 3,
+  warningRepeatMs: 15000,
+  dangerRepeatMs: 9000,
+  lostRepeatMs: 30000
+});
+
+function eyeAspectRatio(landmarks, width, height) {
+  const dist = (a, b) => {
+    const u = landmarks[a], v = landmarks[b];
+    if (!u || !v) return NaN;
+    return Math.hypot((u.x - v.x) * width, (u.y - v.y) * height);
+  };
+  const ear = (corners, uppers, lowers) => {
+    const horiz = dist(...corners);
+    if (!Number.isFinite(horiz) || horiz < 1) return NaN;
+    return (dist(uppers[0], lowers[0]) + dist(uppers[1], lowers[1])) / (2 * horiz);
+  };
+  const left = ear([33, 133], [160, 158], [144, 153]);
+  const right = ear([362, 263], [385, 387], [380, 373]);
+  if (!Number.isFinite(left) || !Number.isFinite(right)) return NaN;
+  return (left + right) / 2;
+}
+
+function calibrateThreshold(samples) {
+  const valid = samples.filter(v => Number.isFinite(v) && v >= 0.13 && v <= 0.48).sort((a,b)=>a-b);
+  if (valid.length < 15) return null;
+  // Use the upper middle of open-eye observations to avoid blinks during calibration.
+  const start = Math.floor(valid.length * .55);
+  const selected = valid.slice(start);
+  const baseline = selected.reduce((sum, value)=>sum+value,0)/selected.length;
+  if (baseline < .16) return null;
+  return {baseline, threshold:Math.max(.12,Math.min(.25,baseline*.64))};
+}
+
+class DrowsinessMonitor {
+  constructor(threshold, options = {}) {
+    this.options = {...DEFAULTS, ...options};
+    this.threshold = threshold;
+    this.reset();
+  }
+  reset() {
+    this.closedSince = null;
+    this.lostSince = null;
+    this.isClosed = false;
+    this.warningIssued = false;
+    this.dangerIssued = false;
+    this.lastWarningAt = -Infinity;
+    this.lastDangerAt = -Infinity;
+    this.lastLostAt = -Infinity;
+    this.repeatedIssuedAt = -Infinity;
+    this.warningTimes = [];
+    this.dangerLatched = false;
+    this.totalWarnings = 0;
+    this.totalDangers = 0;
+    this.totalLost = 0;
+  }
+  update(now, faceFound, ear) {
+    const o = this.options;
+    const events = [];
+    if (!faceFound || !Number.isFinite(ear) || ear <= 0 || ear > .8) {
+      if (this.lostSince === null) this.lostSince = now;
+      this.closedSince = null;
+      this.isClosed = false;
+      this.warningIssued = false;
+      this.dangerIssued = false;
+      const lostDuration = now - this.lostSince;
+      if (lostDuration >= o.lostMs && now - this.lastLostAt >= o.lostRepeatMs) {
+        events.push({level:'lost',code:'camera',message:'顔を確認できません。安全な場所に停車してから設置を確認してください。'});
+        this.lastLostAt = now;
+        this.totalLost++;
+      }
+      return this.result(now, 'lost', 0, lostDuration, events);
+    }
+    this.lostSince = null;
+    this.isClosed = this.isClosed ? ear < this.threshold * 1.12 : ear < this.threshold;
+    if (this.isClosed) {
+      if (this.closedSince === null) this.closedSince = now;
+      const duration = now - this.closedSince;
+      if (duration >= o.warnMs && !this.warningIssued) {
+        events.push({level:'warning',code:'eyes',message:'目を閉じている時間が長くなっています。眠気があれば運転を中断してください。'});
+        this.warningTimes.push(now);
+        this.warningIssued = true;
+        this.lastWarningAt = now;
+        this.totalWarnings++;
+      }
+      if (duration >= o.dangerMs && !this.dangerIssued) {
+        events.push({level:'danger',code:'eyes',message:'長い閉眼を検知しました。安全な場所に停車して運転を中断してください。'});
+        this.dangerIssued = true;
+        this.dangerLatched = true;
+        this.lastDangerAt = now;
+        this.totalDangers++;
+      } else if (duration >= o.dangerMs && this.dangerIssued && now - this.lastDangerAt >= o.dangerRepeatMs) {
+        events.push({level:'danger',code:'repeat',message:'危険が続いています。安全な場所に停車してください。'});
+        this.lastDangerAt = now;
+      }
+      this.warningTimes = this.warningTimes.filter(t=> now - t <= o.repeatedWindowMs);
+      if (this.warningTimes.length >= o.repeatedWarnings && now - this.repeatedIssuedAt > o.repeatedWindowMs) {
+        events.push({level:'danger',code:'frequent',message:'閉眼の繰り返しを検知しました。安全な場所に停車して休憩してください。'});
+        this.repeatedIssuedAt = now;
+        this.dangerLatched = true;
+        this.totalDangers++;
+      }
+      return this.result(now, 'closed', duration, 0, events);
+    }
+    this.closedSince = null;
+    this.warningIssued = false;
+    this.dangerIssued = false;
+    this.warningTimes = this.warningTimes.filter(t=> now - t <= o.repeatedWindowMs);
+    return this.result(now, 'open', 0, 0, events);
+  }
+  result(now, observation, closedMs, lostMs, events) {
+    const severity = this.dangerLatched ? 'danger'
+      : observation === 'lost' && lostMs >= this.options.lostMs ? 'lost'
+      : closedMs >= this.options.warnMs ? 'warning'
+      : observation === 'lost' ? 'uncertain' : 'normal';
+    return {severity, observation, closedMs, lostMs, events,
+      dangerLatched:this.dangerLatched,
+      totalWarnings:this.totalWarnings, totalDangers:this.totalDangers,totalLost:this.totalLost,
+      threshold:this.threshold};
+  }
+}
+
+
+
+/* 横向き／下向き：正面補正を基準にした相対指標。運転の安全性を認定するものではない。 */
+function measureAttention(landmarks, w, h) {
+  if (!landmarks || !w || !h) return null;
+  const p = i => landmarks[i];
+  for (const i of [1, 33, 133, 362, 263, 152, 159, 145, 386, 374]) {
+    if (!p(i) || !Number.isFinite(p(i).x) || !Number.isFinite(p(i).y)) return null;
+  }
+  const avg = (a,b) => ({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  const eyeL = avg(p(33),p(133)), eyeR = avg(p(362),p(263));
+  const eyeMid = avg(eyeL,eyeR);
+  const eyeWidth = Math.hypot((eyeR.x-eyeL.x)*w,(eyeR.y-eyeL.y)*h);
+  if (eyeWidth < 16) return null;
+  const nose = p(1);
+  const yaw = (nose.x-eyeMid.x)*w/eyeWidth;
+  // 顔幅を基準とした鼻の左右偏りも併用。目の中心だけでは捉えにくい横向きを補う。
+  // 値は角度ではなく、カメラ位置と顔の形状に依存する相対指標。
+  let cheekBias = NaN;
+  if (p(234) && p(454)) {
+    const left = Math.min(p(234).x, p(454).x), right = Math.max(p(234).x, p(454).x);
+    if ((right-left)*w > 35) cheekBias = (2*nose.x-left-right)/(right-left);
+  }
+  // 顔の縦方向の簡易指標。角度そのもの（度数）ではない。
+  const pitch = (nose.y-eyeMid.y)*h/eyeWidth;
+  let gazeDown = NaN;
+  // 虹彩座標がある場合のみ利用する。閉眼時は利用しない。
+  if (landmarks.length >= 478 && p(468) && p(473)) {
+    const ratios = [];
+    for(const [iris,top,bottom] of [[468,159,145],[473,386,374]]) {
+      const a=p(top),b=p(bottom),c=p(iris);
+      const vertical=(b.y-a.y)*h;
+      if(vertical>3.5) ratios.push((c.y-a.y)*h/vertical);
+    }
+    if(ratios.length===2) gazeDown = (ratios[0]+ratios[1])/2;
+  }
+  // 周辺警報は基準点との差分を見るため、顔を正面に向けて補正する。
+  // 左右の目の見かけ上の幅比。首の回旋で左右差が生じるため補助指標に使う。
+  // カメラ角度・眼鏡・表情に影響されるため、実角度（度）と解釈しない。
+  const eyeWidthLeft=Math.abs(p(133).x-p(33).x)*w;
+  const eyeWidthRight=Math.abs(p(263).x-p(362).x)*w;
+  const eyeAsymmetry=(eyeWidthLeft>5 && eyeWidthRight>5)
+    ? Math.log(eyeWidthLeft/eyeWidthRight):NaN;
+  return {yaw,cheekBias,pitch,gazeDown,eyeAsymmetry};
+}
+function median(values) {
+  const valid=values.filter(Number.isFinite).sort((a,b)=>a-b);
+  return valid.length?valid[Math.floor(valid.length/2)]:NaN;
+}
+const YAW_MODES = Object.freeze({
+  normal:{awayThreshold:0.095,awayMs:1600},
+  high:{awayThreshold:0.065,awayMs:900},
+  max:{awayThreshold:0.042,awayMs:650},
+  extreme:{awayThreshold:0.030,awayMs:450}
+});
+class AttentionMonitor {
+  constructor(samples, opts={}) {
+    this.base = {
+      yaw: median(samples.map(x=>x.yaw)),
+      cheekBias: median(samples.map(x=>x.cheekBias)),
+      pitch: median(samples.map(x=>x.pitch)),
+      gazeDown: median(samples.map(x=>x.gazeDown)),
+      eyeAsymmetry: median(samples.map(x=>x.eyeAsymmetry))
+    };
+    this.options = {awayThreshold:0.042,pitchThreshold:0.16,
+      gazeThreshold:0.22,awayMs:650,downMs:2800,repeatMs:5500,...opts};
+    this.awaySince=null;this.downSince=null;
+    this.awayTriggered=false;this.downTriggered=false;
+    this.lastAway=-Infinity;this.lastDown=-Infinity;
+    this.awayCount=0;this.downCount=0;
+    this.turnFilter=null;
+    this.lastTurnUpdate=null;
+  }
+  update(now, measurements, eyesOpen=true) {
+    const o=this.options;
+    const empty = {away:false,down:false,turn:NaN,direction:'—',awayDuration:0,
+      events:[],awayCount:this.awayCount,downCount:this.downCount};
+    if(!measurements||!eyesOpen) {
+      // 数フレームの追跡欠落では左右判定をリセットしない。
+      // ただし長い欠落や閉眼は横向きと推測せず、通常の顔見失い判定に任せる。
+      if (this.lastTurnUpdate===null || now-this.lastTurnUpdate>650 || !eyesOpen) {
+        this.awaySince=null;this.awayTriggered=false;this.turnFilter=null;
+      }
+      this.downSince=null;this.downTriggered=false;
+      return empty;
+    }
+    const eyeTurn=Math.abs(measurements.yaw-this.base.yaw);
+    const cheekTurn=Number.isFinite(measurements.cheekBias) && Number.isFinite(this.base.cheekBias)
+       ? Math.abs(measurements.cheekBias-this.base.cheekBias)*0.60 : NaN;
+    const eyeAsymTurn=Number.isFinite(measurements.eyeAsymmetry) && Number.isFinite(this.base.eyeAsymmetry)
+       ? Math.abs(measurements.eyeAsymmetry-this.base.eyeAsymmetry)*0.17 : NaN;
+    const rawTurn=Math.max(eyeTurn, Number.isFinite(cheekTurn)?cheekTurn:0,
+      Number.isFinite(eyeAsymTurn)?eyeAsymTurn:0);
+    // 約1フレームだけ平滑化し、左右振り向きへの反応速度を上げる。
+    this.turnFilter=this.turnFilter===null?rawTurn:0.78*rawTurn+0.22*this.turnFilter;
+    this.lastTurnUpdate=now;
+    const turn=this.turnFilter;
+    // スマホの鏡像表示と左右の見え方が異なるため、画面には方向を断定表示しない。
+    const direction=turn>=o.awayThreshold?'横向き傾向':'正面付近';
+    const pitchDiff=measurements.pitch-this.base.pitch;
+    const gazeDiff=Number.isFinite(measurements.gazeDown)&&Number.isFinite(this.base.gazeDown)
+      ?measurements.gazeDown-this.base.gazeDown:NaN;
+    // 判定の境界でカウントが毎フレーム0に戻らないようヒステリシスを設ける。
+    const away=turn>=o.awayThreshold || (this.awaySince!==null && turn>=o.awayThreshold*0.78);
+    const down=(pitchDiff>=o.pitchThreshold) || (Number.isFinite(gazeDiff)&&gazeDiff>=o.gazeThreshold);
+    const events=[];
+    if(away) {
+      if(this.awaySince===null) this.awaySince=now;
+      if(now-this.awaySince>=o.awayMs &&
+         ((!this.awayTriggered) || now-this.lastAway>=o.repeatMs)) {
+        events.push({level:'warning',code:'away',message:'横向きの継続を検知しました。必要な安全確認は行い、視線を前方へ戻してください。'});
+        this.lastAway=now;this.awayCount++;this.awayTriggered=true;
+      }
+    } else {this.awaySince=null;this.awayTriggered=false;}
+    if(down) {
+      if(this.downSince===null)this.downSince=now;
+      if(now-this.downSince>=o.downMs&&!this.downTriggered&&now-this.lastDown>=o.repeatMs) {
+        events.push({level:'warning',code:'down',message:'下向きの状態が長く続いています。スマホや画面を見ている場合は使用をやめ、安全な場所で停車してください。'});
+        this.lastDown=now;this.downCount++;this.downTriggered=true;
+      }
+    } else {this.downSince=null;this.downTriggered=false;}
+    return {away,down,turn,direction,pitchDiff,gazeDiff,events,
+      awayDuration:this.awaySince===null?0:now-this.awaySince,
+      awayCount:this.awayCount,downCount:this.downCount};
+  }
+}
+
+const VERSION = '0.8.0';
+const MP_BUNDLE = new URL('./assets/vision_bundle.mjs', document.baseURI).href;
+const MP_WASM = new URL('./assets/wasm', document.baseURI).href;
+const MP_MODEL = new URL('./assets/face_landmarker.task', document.baseURI).href;
+const REQUIRED_ASSETS = [
+  ['./assets/vision_bundle.mjs','AIライブラリ'],
+  ['./assets/wasm/vision_wasm_internal.wasm','WASM実行ファイル'],
+  ['./assets/wasm/vision_wasm_internal.js','WASM制御ファイル'],
+  ['./assets/face_landmarker.task','顔認識モデル']
+];
+const $ = id => document.getElementById(id);
+const diag=(stage,detail='')=>{ $('diagStage').textContent=stage; $('diagDetail').textContent=detail; };
+window.addEventListener('error',e=>diag('JavaScriptエラー',String(e.message||'詳細不明')));
+window.addEventListener('unhandledrejection',e=>diag('通信・初期化エラー',String(e.reason?.message||e.reason||'詳細不明')));
+const el = {
+  start: $('startBtn'), stop: $('stopBtn'), test: $('testBtn'), csv: $('csvBtn'),
+  video: $('video'), canvas: $('overlay'), placeholder: $('placeholder'),
+  camLabel: $('cameraLabel'), camText: $('cameraText'), status: $('statusCard'),
+  stateTitle: $('stateTitle'), stateDescription: $('stateDescription'), stateChip: $('stateChip'),
+  elapsed: $('elapsed'), warnCount: $('warnCount'), dangerCount: $('dangerCount'),
+  eye: $('eyeValue'), threshold: $('thresholdValue'), fps: $('fpsValue'),
+  setup: $('setupValue'), hint: $('hint'), logs: $('logList'), error: $('error'),
+  wake: $('wakeValue'), privacy: $('privacyValue'),
+  yaw: $('yawValue'), down: $('downValue'), awayCount: $('awayCount'),
+  downCount: $('downCount'), attentionCalib: $('attentionCalib'),
+  yawSensitivity: $('yawSensitivity'), awayDuration: $('awayDuration'),
+  turnDirection: $('turnDirection'), audioState: $('audioState'), turnTest: $('turnTestBtn')
+};
+let running = false, initializing = false, token = 0, stream = null, faceLandmarker = null;
+let monitor = null, audioContext = null, wakeLock = null, runAt = 0;
+let lastInference = 0, lastFrames = [], lastResults = null;
+let calibration = [], calibrationStarted = 0, threshold = null;
+let eventLogs = [], rafId = 0, priorVideoTime = -1, lastFrameTime = 0;
+let attention = null, poseCalibration = [], attentionCalibStarted = 0;
+
+
+function setStatus(severity, title, detail) {
+  el.status.className = `status-card ${severity}`;
+  el.stateTitle.textContent = title;
+  el.stateDescription.textContent = detail;
+  const short = {idle:'待機',normal:'正常',warning:'注意',danger:'危険',lost:'検知不能',uncertain:'確認中',setup:'準備中'};
+  el.stateChip.textContent = short[severity] || '待機';
+}
+function uiRunning(isRunning) {
+  el.yawSensitivity.disabled = isRunning || initializing;
+  el.start.disabled = isRunning || initializing;
+  el.start.textContent = isRunning ? '● 監視中' : initializing ? 'AI準備中…' : '▶ 監視を開始';
+  el.stop.disabled = !(isRunning || initializing);
+  el.csv.disabled = !eventLogs.length;
+  el.placeholder.hidden = isRunning;
+  el.camLabel.classList.toggle('active', isRunning);
+  el.camText.textContent = isRunning ? '監視中' : initializing ? '準備中' : 'カメラ停止';
+}
+function errorText(message) { el.error.textContent = message || ''; }
+function updateStats(result, ear) {
+  if (result) {
+    el.warnCount.textContent = String(result.totalWarnings);
+    el.dangerCount.textContent = String(result.totalDangers);
+  }
+  el.eye.textContent = Number.isFinite(ear) ? ear.toFixed(3) : '—';
+  el.threshold.textContent = threshold ? threshold.toFixed(3) : '—';
+}
+function addLog(level, message) {
+  const time = new Date();
+  eventLogs.unshift({time:time.toLocaleTimeString('ja-JP',{hour12:false}),iso:time.toISOString(),level,message});
+  eventLogs = eventLogs.slice(0,100);
+  el.logs.textContent = '';
+  for (const r of eventLogs.slice(0,12)) {
+    const li = document.createElement('li');
+    const t = document.createElement('time'); t.textContent = r.time;
+    const text = document.createElement('span');
+    text.className = 'severity-'+r.level;
+    text.textContent = r.message;
+    li.append(t,text);el.logs.appendChild(li);
+  }
+  el.csv.disabled = !eventLogs.length;
+}
+function updateAudioState(message) {
+  el.audioState.textContent=message;
+}
+async function unlockAudio() {
+  try {
+    if (!audioContext) audioContext=new (window.AudioContext || window.webkitAudioContext)();
+    // iOS Safariではユーザー操作によるAudioContextの開始が必要。
+    if (audioContext.state==='suspended') await audioContext.resume();
+    updateAudioState(audioContext.state==='running'?'音声回路ON':'音声が停止中');
+  } catch(e) {
+    updateAudioState('音声利用不可');
+    errorText('この端末では警報音が開始できません。Safari・端末音量を確認してください。');
+  }
+}
+function initAudio() {
+  // 「開始」「テスト」などの実際のタップ内から呼び出す。
+  void unlockAudio();
+}
+function playBeeps(level='warning') {
+  const ctx=audioContext;
+  if (!ctx || ctx.state!=='running') {
+    updateAudioState('音声が停止中・要確認');
+    return false;
+  }
+  try {
+    const now=ctx.currentTime+.03;
+    const special=level==='away';
+    const n=level==='danger'?6:special?5:level==='lost'?2:3;
+    const step=special?.19:level==='danger'?.2:.28;
+    for(let i=0;i<n;i++) {
+      const t=now+i*step;
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
+      osc.type=special||level==='danger'?'square':'sine';
+      const hz=special?(i%2?1060:740):level==='danger'?(i%2?1000:770):660;
+      osc.frequency.setValueAtTime(hz,t);
+      gain.gain.setValueAtTime(.0001,t);
+      // 出力値が大きくても端末音量・消音設定で聞こえない場合がある。
+      gain.gain.exponentialRampToValueAtTime(special?.22:level==='danger'?.20:.13,t+.018);
+      gain.gain.exponentialRampToValueAtTime(.0001,t+.14);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);osc.stop(t+.16);
+    }
+    updateAudioState('音声回路ON・警報発信');
+    try { if(navigator.vibrate) navigator.vibrate(special?[180,80,180,80,180]:[140,90,140]); } catch(_) {}
+    return true;
+  } catch(e) {
+    updateAudioState('警報音エラー');
+    return false;
+  }
+}
+function speak(message) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(message);
+    utterance.lang='ja-JP'; utterance.rate=1.08; utterance.volume=1;
+    speechSynthesis.speak(utterance);
+  } catch(_) {}
+}
+function alarm(level,message) {
+  // 横向きは通常の警告より識別しやすい5連打音で知らせる。
+  const sideways=message.includes('横向き');
+  playBeeps(sideways?'away':level);
+  if (level==='danger') speak('危険です。安全な場所に停車し、運転を中断してください。');
+  else if (level==='lost') speak('カメラで顔を確認できません。安全な場所で確認してください。');
+  else if (sideways) speak('よそ見に注意。前方を確認してください。');
+  else if (message.includes('下向き')) speak('下向きが続いています。前方に注意してください。');
+  else speak('眠気に注意してください。安全な場所で休憩してください。');
+  addLog(level,message);
+}
+function testSideAlarm() {
+  initAudio();
+  // resume()が非同期でも確実に再試行する（タップ操作を前提とする）。
+  void unlockAudio().then(()=>{
+    alarm('warning','横向き警報の動作テストです。');
+    el.hint.textContent='左右よそ見の警報テストを行いました。聞こえなければ端末の音量・消音設定・Safariを確認してください。';
+  });
+}
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) {el.wake.textContent='非対応'; return;}
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    el.wake.textContent = '画面保持中';
+    wakeLock.addEventListener('release',()=>{el.wake.textContent='解除';});
+  } catch(_) { el.wake.textContent='利用不可'; }
+}
+async function releaseWakeLock() {
+  if (wakeLock) { try{await wakeLock.release();}catch(_){} wakeLock=null;}
+  el.wake.textContent='停止中';
+}
+function drawFace(landmarks, color) {
+  const canvas = el.canvas;
+  const width = el.video.videoWidth, height=el.video.videoHeight;
+  if (!width || !height) return;
+  if (canvas.width!==width || canvas.height!==height) {canvas.width=width;canvas.height=height;}
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,width,height);
+  if (!landmarks) return;
+  const eyePoints=[33,133,160,158,153,144,362,263,385,387,373,380];
+  ctx.fillStyle=color;
+  ctx.strokeStyle=color;
+  ctx.lineWidth=1.4;
+  for(const i of eyePoints){const p=landmarks[i];if(!p)continue;ctx.beginPath();ctx.arc(p.x*width,p.y*height,3.2,0,Math.PI*2);ctx.fill();}
+  const rim=[10,152,234,454].map(i=>landmarks[i]).filter(Boolean);
+  if(rim.length===4){const minX=Math.min(...rim.map(p=>p.x))*width;
+    const maxX=Math.max(...rim.map(p=>p.x))*width;
+    const minY=Math.min(...rim.map(p=>p.y))*height;
+    const maxY=Math.max(...rim.map(p=>p.y))*height;
+    ctx.strokeRect(minX,minY,maxX-minX,maxY-minY);}
+}
+function renderMonitor(result, ear) {
+  updateStats(result,ear);
+  switch(result.severity){
+    case 'danger':setStatus('danger','危険：運行を中断','長い閉眼を検知しました。安全な場所で停車し、休憩・交代してください。');break;
+    case 'warning':setStatus('warning','眠気の兆候を検知','安全な場所で休憩する準備をしてください。');break;
+    case 'lost':setStatus('lost','顔を検知できません','監視が成立していません。停車後にスマホの向きを確認してください。');break;
+    case 'uncertain':setStatus('uncertain','顔を確認しています','顔が映る位置を確認してください。運転中は操作しないでください。');break;
+    default:setStatus('normal','監視中','顔と目の状態を確認しています。検知がなくても安全とは限りません。');
+  }
+  for(const event of result.events) alarm(event.level,event.message);
+  el.elapsed.textContent = timefmt(performance.now()-runAt);
+}
+function timefmt(ms){const sec=Math.floor(Math.max(0,ms)/1000);return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;}
+function frame(now) {
+  if (!running) return;
+  rafId = requestAnimationFrame(frame);
+  if (now-lastInference < 125 || el.video.readyState < 2 || !faceLandmarker || !el.video.videoWidth) return;
+  if (el.video.currentTime === priorVideoTime) return;
+  priorVideoTime = el.video.currentTime;
+  lastInference=now;
+  let landmarks=null, ear=NaN;
+  try {
+    const detection=faceLandmarker.detectForVideo(el.video, now);
+    landmarks=detection.faceLandmarks?.[0] || null;
+    if (landmarks) ear=eyeAspectRatio(landmarks,el.video.videoWidth,el.video.videoHeight);
+    el.setup.textContent='解析中';
+  } catch(e) {
+    errorText(`解析に失敗しました。安全な場所で再起動してください。${e.message||''}`);
+    stopMonitoring(true);
+    return;
+  }
+  lastFrames.push(now);lastFrames=lastFrames.filter(t=>now-t<2000);
+  el.fps.textContent = lastFrames.length>1?`${((lastFrames.length-1)*1000/(lastFrames.at(-1)-lastFrames[0])).toFixed(1)} 回/秒`:'—';
+  if (!monitor) {
+    if(!calibrationStarted) calibrationStarted=now;
+    if(Number.isFinite(ear)) calibration.push(ear);
+    if(now-calibrationStarted>2100 && calibration.length>=15){
+      const result=calibrateThreshold(calibration);
+      if(result){
+        threshold=result.threshold;
+        monitor=new DrowsinessMonitor(threshold);
+        el.setup.textContent='自動補正完了';
+        addLog('normal',`目の開閉の自動補正完了（基準 ${result.baseline.toFixed(3)}）`);
+      }
+    }
+    if (!monitor) {
+      setStatus('setup','目の状態を補正中','停止中に目を開け、カメラを正面から見てください。');
+      el.setup.textContent = now-calibrationStarted>12000?'補正待ち：顔・明るさを確認':'自動補正中';
+      if(now-calibrationStarted>12000){calibration=[];calibrationStarted=now;}
+      drawFace(landmarks,'#ffc768');
+      return;
+    }
+  }
+  const result=monitor.update(now,Boolean(landmarks),ear);
+  // 補正中は顔を正面に向ける。閉眼・顔の見失い時のデータを補正に使わない。
+  const sample = Number.isFinite(ear) && !monitor.isClosed && landmarks
+    ? measureAttention(landmarks,el.video.videoWidth,el.video.videoHeight):null;
+  if (!attention) {
+    if(!attentionCalibStarted) attentionCalibStarted=now;
+    if(sample)poseCalibration.push(sample);
+    if(now-attentionCalibStarted>=3200 && poseCalibration.length>=12) {
+      attention=new AttentionMonitor(poseCalibration,YAW_MODES[el.yawSensitivity.value] || YAW_MODES.max);
+      el.attentionCalib.textContent='補正完了';
+      addLog('normal','よそ見・下向き判定の正面補正完了');
+    } else if(now-attentionCalibStarted>=15000) {
+      poseCalibration=[];attentionCalibStarted=now;
+      el.attentionCalib.textContent='補正待ち（停車して正面を向く）';
+    } else {
+      el.attentionCalib.textContent='正面補正中…';
+    }
+  }
+  const a=attention?attention.update(now,sample,!monitor.isClosed):null;
+  if (a) {
+    el.yaw.textContent=Number.isFinite(a.turn)?a.turn.toFixed(3)+' / 基準 '+attention.options.awayThreshold.toFixed(3):'—';
+    el.turnDirection.textContent=a.direction;
+    el.awayDuration.textContent=a.away?(a.awayDuration/1000).toFixed(1)+' 秒 / '+(attention.options.awayMs/1000).toFixed(1)+' 秒':'0.0 秒';
+    el.down.textContent=Number.isFinite(a.pitchDiff)?a.pitchDiff.toFixed(2)+'（相対値）':'—';
+    el.awayCount.textContent=a.awayCount+' 回';
+    el.downCount.textContent=a.downCount+' 回';
+  }
+  renderMonitor(result,ear);
+  if (a && result.severity==='normal') {
+    if(a.down) setStatus('uncertain','下向き傾向を確認中','長く続く場合に警報します。スマホ使用の断定はできません。');
+    else if(a.away) setStatus('uncertain','横向きを検知中','設定時間を超えた場合に警報音が鳴ります。');
+  }
+  if (a) {
+    // 眠気の重大警報を最優先し、警報音が重複しないようにする。
+    const drowsyAlarm=result.events.some(e=>e.level==='danger');
+    for (const event of a.events) {
+      if(drowsyAlarm) addLog(event.level,event.message);
+      else alarm(event.level,event.message);
+      if(result.severity!=='danger') {
+        if(event.code==='away') setStatus('warning','よそ見の可能性','長時間の横向きを検知しました。');
+        if(event.code==='down') setStatus('warning','下向きの継続を検知','スマホ使用とは断定できません。前方に注意してください。');
+      }
+    }
+  }
+  drawFace(landmarks,result.severity==='danger'?'#ff6676':result.severity==='warning'?'#ffc768':'#55e3b5');
+}
+async function openCamera() {
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('カメラを利用できません。HTTPSのページで開き、ブラウザーのカメラ許可を確認してください。');
+  return navigator.mediaDevices.getUserMedia({
+    audio:false,
+    video:{facingMode:'user',width:{ideal:640},height:{ideal:480},frameRate:{ideal:15,max:24}}
+  });
+}
+async function checkFiles(showSuccess=true) {
+  const details = [];
+  for (const [path,label] of REQUIRED_ASSETS) {
+    try {
+      const url=new URL(path,document.baseURI);
+      // HEAD avoids downloading the model just for a quick deployment check.
+      const res=await fetch(url.href,{method:'HEAD',cache:'no-store'});
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      details.push('OK '+label);
+    } catch (e) {
+      details.push('NG '+label+'（'+(e?.message||String(e))+'）');
+    }
+  }
+  const failed=details.some(x=>x.startsWith('NG'));
+  diag(failed?'配信ファイル不足':'配信ファイル確認OK',details.join(' ／ '));
+  if(failed) {
+    const msg='AIファイルが公開されていません。GitHubの Settings → Pages を「GitHub Actions」にして、Actionsの成功を確認してください。';
+    errorText(msg);
+    addLog('lost',msg);
+  } else if(showSuccess) {
+    errorText('AIファイル4項目は正常に配信されています。停車中に「監視を開始」で動作を確認してください。');
+  }
+  return !failed;
+}
+async function createFaceLandmarker() {
+  diag('AIライブラリ読込中','GitHub Pages内のAIファイルを使用しています。');
+  let mod;
+  try {
+    mod=await import(MP_BUNDLE);
+  } catch (e) {
+    throw new Error('同一ドメインのAIライブラリ読込失敗：'+(e?.message||String(e))+'。GitHub Actionsのデプロイが成功しているか確認してください。');
+  }
+  const { FaceLandmarker, FilesetResolver }=mod;
+  if(!FaceLandmarker || !FilesetResolver) throw new Error('AIライブラリにFaceLandmarkerが見つかりません。');
+  diag('AI本体の読み込み中','GitHub PagesからWASMと顔認識モデルを読み込みます。');
+  let vision;
+  try {vision=await FilesetResolver.forVisionTasks(MP_WASM);}
+  catch(e){throw new Error('WASM設定エラー：'+(e?.message||String(e)));}
+  let firstError;
+  try {return await FaceLandmarker.createFromOptions(vision,{
+    baseOptions:{modelAssetPath:MP_MODEL,delegate:'GPU'},runningMode:'VIDEO',numFaces:1,
+    minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5});
+  } catch(e){firstError=e;}
+  try {return await FaceLandmarker.createFromOptions(vision,{
+    baseOptions:{modelAssetPath:MP_MODEL,delegate:'CPU'},runningMode:'VIDEO',numFaces:1,
+    minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5});
+  } catch(e){throw new Error('AIモデル初期化エラー：'+(e?.message||firstError?.message||String(e)));}
+}
+async function startMonitoring() {
+  if (running || initializing) return;
+  const myToken=++token;initializing=true;
+  errorText('');diag('カメラ準備中','カメラの許可ダイアログが出たら許可してください。');setStatus('setup','準備しています','カメラとAIモデルを読み込んでいます。');
+  el.setup.textContent='起動中';uiRunning(false);
+  initAudio(); // begin on an actual user gesture for mobile Safari.
+  try {
+    stream=await openCamera();
+    diag('カメラ許可済み','映像を準備しています。');
+    if(myToken!==token) {stream.getTracks().forEach(t=>t.stop());return;}
+    el.video.srcObject=stream;
+    await Promise.race([el.video.play(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('映像開始が15秒以上応答しません。ブラウザーでカメラ利用を確認してください。')),15000))]);
+    diag('カメラ映像OK','AIモデルを読み込んでいます。インターネット接続を確認してください。');
+    el.camText.textContent='AI読み込み中';
+    if (!await checkFiles(false)) throw new Error('AIファイル未配信のため監視を開始できません。上の配信診断を確認してください。');
+    faceLandmarker=await createFaceLandmarker();
+    diag('AI読み込み完了','閉眼検知の準備ができました。');
+    if(myToken!==token) {try{faceLandmarker?.close();}catch(_){}faceLandmarker=null;return;}
+    eventLogs=[];el.logs.textContent='';
+    threshold=null;monitor=null;calibration=[];calibrationStarted=0;lastInference=0;
+    attention=null;poseCalibration=[];attentionCalibStarted=0;
+    el.yaw.textContent='—';el.awayDuration.textContent='—';el.down.textContent='—';el.turnDirection.textContent='未検知';el.awayCount.textContent='0 回';el.downCount.textContent='0 回';el.attentionCalib.textContent='未開始';
+    lastFrames=[];priorVideoTime=-1;runAt=performance.now();
+    el.warnCount.textContent='0';el.dangerCount.textContent='0';el.eye.textContent='—';el.threshold.textContent='—';
+    initializing=false;running=true;
+    diag('監視動作中','停車中に正面を向き、閉眼・顔向きの補正を完了してください。');
+    requestWakeLock();uiRunning(true);
+    rafId=requestAnimationFrame(frame);
+    addLog('normal','カメラの監視を開始しました（AIの自動補正中）');
+  } catch(e) {
+    if(myToken===token) {
+      const message = e?.name==='NotAllowedError'?'カメラが許可されていません。ブラウザー設定からカメラを許可してください。'
+        :e?.name==='NotFoundError'?'使用できるカメラがありません。'
+        :e?.name==='NotReadableError'?'カメラを他のアプリが使用中の可能性があります。'
+        :e?.message||'起動に失敗しました。';
+      errorText(message);
+      diag('起動失敗',message+' エラー種別: '+String(e?.name||'不明'));
+      setStatus('idle','開始できませんでした','安全な場所で問題を確認してください。');
+      addLog('lost',message);
+      await stopMonitoring(true,true);
+    }
+  }
+}
+async function stopMonitoring(withError=false,keepError=false) {
+  ++token;initializing=false;running=false;
+  if (rafId) cancelAnimationFrame(rafId);rafId=0;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  if(el.video.srcObject) {el.video.pause();el.video.srcObject=null;}
+  if(faceLandmarker){try{faceLandmarker.close();}catch(_){}faceLandmarker=null;}
+  const ctx=el.canvas.getContext('2d');ctx.clearRect(0,0,el.canvas.width,el.canvas.height);
+  await releaseWakeLock();
+  uiRunning(false);
+  el.setup.textContent='停止中';el.fps.textContent='—';
+  if(!withError && !keepError)errorText('');
+  if(!withError){diag('手動停止','監視を停止しました。');}
+  if(!withError)setStatus('idle','監視停止','再開する場合は停車中に「監視を開始」を押してください。');
+  if(!withError && eventLogs.length) addLog('normal','監視を停止しました');
+}
+function testAlarm() {
+  initAudio();
+  void unlockAudio().then(()=>{
+    playBeeps('danger');
+    speak('警報テストです。安全な場所に停車して休憩してください。');
+  });
+  el.hint.textContent='警報音と音声が聞こえない場合、スマホの音量と消音設定を確認してください。';
+}
+function csvExport() {
+  const rows=[['時刻(ISO8601)','種別','内容'],...eventLogs.slice().reverse().map(e=>[e.iso,e.level,e.message])];
+  const quote=t=>'"'+String(t).replaceAll('"','""')+'"';
+  const csv='\uFEFF'+rows.map(cols=>cols.map(quote).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`居眠り見守り_警報記録_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if (document.hidden && running) {
+    addLog('lost','画面が非表示になりました。検知停止と見なしてください。');
+    errorText('画面が非表示になりました。監視の継続は保証されません。');
+  }
+  if (!document.hidden && running) requestWakeLock();
+});
+window.addEventListener('pagehide',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());});
+el.start.addEventListener('click',startMonitoring);
+el.stop.addEventListener('click',()=>stopMonitoring());
+el.test.addEventListener('click',testAlarm);
+el.turnTest.addEventListener('click',testSideAlarm);
+el.csv.addEventListener('click',csvExport);
+$('filesBtn').addEventListener('click',()=>checkFiles(true));
+uiRunning(false);
+console.info('Drive Guard prototype',VERSION);
+
+</script>
+</body>
+</html>
