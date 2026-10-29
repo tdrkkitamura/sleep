@@ -1,0 +1,62 @@
+name: Build and publish DRIVE GUARD (bundled AI)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download official MediaPipe package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/mp"
+          npm install --prefix "$RUNNER_TEMP/mp" --no-save --no-audit --no-fund @mediapipe/tasks-vision@0.10.22
+          mkdir -p deploy/assets/wasm
+          PACKAGE="$RUNNER_TEMP/mp/node_modules/@mediapipe/tasks-vision"
+          cp "$PACKAGE/vision_bundle.mjs" deploy/assets/vision_bundle.mjs
+          cp -R "$PACKAGE/wasm/." deploy/assets/wasm/
+          test -s deploy/assets/vision_bundle.mjs
+          test -s deploy/assets/wasm/vision_wasm_internal.wasm
+          test -s deploy/assets/wasm/vision_wasm_internal.js
+      - name: Download official face landmark model
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --show-error --silent --retry 3 \
+            'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task' \
+            --output deploy/assets/face_landmarker.task
+          test "$(wc -c < deploy/assets/face_landmarker.task)" -gt 1000000
+      - name: Add app files
+        shell: bash
+        run: |
+          cp index.html deploy/index.html
+          touch deploy/.nojekyll
+          test -s deploy/index.html
+          du -sh deploy/assets
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './deploy'
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
