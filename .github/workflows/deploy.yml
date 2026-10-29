@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/mp"
-          npm install --prefix "$RUNNER_TEMP/mp" --no-save --no-audit --no-fund @mediapipe/tasks-vision@0.10.22
+          npm install --prefix "$RUNNER_TEMP/mp" --no-save --no-audit --no-fund @mediapipe/tasks-vision@0.10.35
           mkdir -p deploy/assets/wasm
           PACKAGE="$RUNNER_TEMP/mp/node_modules/@mediapipe/tasks-vision"
           cp "$PACKAGE/vision_bundle.mjs" deploy/assets/vision_bundle.mjs
